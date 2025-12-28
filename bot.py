@@ -265,6 +265,7 @@ def main_menu():
         [InlineKeyboardButton("🎂 Рождени дни", callback_data="menu:bdays")],
         [InlineKeyboardButton("✅ Лични задачи", callback_data="menu:tasks")],
         [InlineKeyboardButton("📦 Поръчки", callback_data="menu:orders")],
+        [InlineKeyboardButton("🐶 Tibo", callback_data="menu:tibo")],
         [InlineKeyboardButton("⚙️ Настройки", callback_data="menu:settings")],
     ])
 
@@ -533,6 +534,15 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if q.data == "menu:orders":
         await q.edit_message_text("📦 Поръчки", reply_markup=orders_menu())
+        return
+
+    if q.data == "menu:tibo":
+        await q.edit_message_text(
+            "🐶 Tibo\n\nТук ще добавяме всичко за моето куче.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Назад", callback_data="back:main")]
+            ])
+        )
         return
 
     # -------- CAR --------
