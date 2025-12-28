@@ -7,10 +7,11 @@ import json
 from pathlib import Path
 from datetime import date
 import httpx
+import os
 
 
-TOKEN = "8225336814:AAF-iTsLTp55WlSioTxwScB3hTS63l5zSYU"
-OPENWEATHER_API_KEY = "133891c5d4ce5651e1e373e5e980daf8" 
+TOKEN = os.getenv("BOT_TOKEN", "")
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 DATA_FILE = Path(__file__).parent / "data.json"
 
 
@@ -347,7 +348,7 @@ def car_summary(data):
 # =========================
 async def get_weather_today(city: str) -> str:
     if not OPENWEATHER_API_KEY or OPENWEATHER_API_KEY == "ТУК_СЛОЖИ_OPENWEATHER_API_KEY":
-        return "❌ Нямаш зададен OPENWEATHER_API_KEY в кода."
+        return "❌ Нямаш зададен OPENWEATHER_API_KEY в средата (env)."
 
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {
@@ -1088,6 +1089,8 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # MAIN
 # =========================
 def main():
+    if not TOKEN:
+        raise RuntimeError("BOT_TOKEN is not set in the environment.")
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("stat", start))
