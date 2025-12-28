@@ -77,6 +77,10 @@ def parse_bg_date_full(s: str):
         return None
 
 
+def is_valid_full_date(date_str: str) -> bool:
+    return parse_bg_date_full(date_str) is not None
+
+
 def days_left_text(date_str: str):
     dt = parse_bg_date_full(date_str)
     if not dt:
@@ -101,6 +105,20 @@ def parse_bday(date_str: str):
     except Exception:
         return None
     return None
+
+
+def is_valid_bday_date(date_str: str) -> bool:
+    parts = (date_str or "").strip().split(".")
+    if len(parts) not in (2, 3):
+        return False
+    try:
+        d = int(parts[0])
+        m = int(parts[1])
+        y = int(parts[2]) if len(parts) == 3 else 2000
+        date(y, m, d)
+        return True
+    except Exception:
+        return False
 
 
 def days_until_birthday(day: int, month: int):
@@ -978,6 +996,11 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # CAR edit
     if mode == "car_edit":
         field = context.chat_data.get("car_field")
+        if field in ("gtp", "vinetka") and not is_valid_full_date(text):
+            await update.message.reply_text(
+                "❌ Невалидна дата. Ползвай формат ДД.ММ.ГГГГ (пример: 24.01.2026)."
+            )
+            return
         if field:
             data["car"][field] = text
             save_data(data)
@@ -994,6 +1017,11 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if mode == "bday_date":
         name = context.chat_data.get("bday_name", "—")
+        if not is_valid_bday_date(text):
+            await update.message.reply_text(
+                "❌ Невалидна дата. Ползвай ДД.ММ или ДД.ММ.ГГГГ (пример: 24.01)."
+            )
+            return
         data["birthdays"].append({"name": name, "date": text})
         save_data(data)
         context.chat_data.clear()
@@ -1012,6 +1040,11 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if mode == "bday_edit_date":
         idx = context.chat_data.get("bday_edit_index")
+        if not is_valid_bday_date(text):
+            await update.message.reply_text(
+                "❌ Невалидна дата. Ползвай ДД.ММ или ДД.ММ.ГГГГ (пример: 24.01)."
+            )
+            return
         if isinstance(idx, int) and 0 <= idx < len(data["birthdays"]):
             data["birthdays"][idx]["date"] = text
             save_data(data)
@@ -1029,6 +1062,11 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if mode == "task_date":
         task_text = context.chat_data.get("task_text", "—")
         task_date = "" if text == "-" else text
+        if task_date and not is_valid_full_date(task_date):
+            await update.message.reply_text(
+                "❌ Невалидна дата. Ползвай ДД.ММ.ГГГГ или '-' ако няма дата."
+            )
+            return
         data["tasks"].append({"text": task_text, "date": task_date})
         save_data(data)
         context.chat_data.clear()
@@ -1038,6 +1076,9 @@ async def text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ORDERS add name -> day picker
     if mode == "orders_supplier_name":
         name = text.strip()
+        if not name:
+            await update.message.reply_text("❌ Невалидно име. Опитай пак.")
+            return
         context.chat_data.clear()
         context.chat_data["orders_supplier_name_tmp"] = name
         context.chat_data["orders_days_selected"] = []
